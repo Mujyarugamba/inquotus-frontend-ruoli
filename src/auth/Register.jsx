@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { API_BASE } from '../config/config';
 import { useNavigate } from 'react-router-dom';
+import { useApi } from '../hooks/useApi';
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -12,6 +12,7 @@ const Register = () => {
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { fetchApi } = useApi();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,31 +20,23 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validazione password
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&]).{6,}$/;
+
     if (!regex.test(form.password)) {
       setMessage('⚠️ La password deve contenere almeno 6 caratteri, una maiuscola, una minuscola, un numero e un simbolo');
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/register`, {
+      await fetchApi('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('✅ Registrazione completata!');
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        setMessage(data.error || 'Errore durante la registrazione');
-      }
+      setMessage('✅ Registrazione completata!');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      console.error('Errore connessione:', err);
-      setMessage('Errore di connessione al server');
+      setMessage(err.message || 'Errore durante la registrazione');
     }
   };
 
@@ -51,24 +44,10 @@ const Register = () => {
     <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
       <h2>Registrati</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="nome"
-          placeholder="Nome completo"
-          value={form.nome}
-          onChange={handleChange}
-          required
-        /><br /><br />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        /><br /><br />
-
+        <input type="text" name="nome" placeholder="Nome completo" value={form.nome} onChange={handleChange} required />
+        <br /><br />
+        <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <br /><br />
         <div style={{ position: 'relative' }}>
           <input
             type={showPassword ? 'text' : 'password'}
@@ -91,14 +70,14 @@ const Register = () => {
           >
             {showPassword ? '🙈' : '👁️'}
           </span>
-        </div><br />
-
+        </div>
+        <br />
         <select name="ruolo" value={form.ruolo} onChange={handleChange} required>
           <option value="committente">Committente</option>
           <option value="impresa">Impresa</option>
           <option value="professionista">Professionista</option>
-        </select><br /><br />
-
+        </select>
+        <br /><br />
         <button type="submit">Registrati</button>
       </form>
       <p>{message}</p>
@@ -107,5 +86,3 @@ const Register = () => {
 };
 
 export default Register;
-
-
