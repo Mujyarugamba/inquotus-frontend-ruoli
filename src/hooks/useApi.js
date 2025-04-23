@@ -1,4 +1,4 @@
-import { API_BASE } from '../config';
+import { API_BASE } from '../config.js'; // ← estensione .js necessaria su Vercel
 
 export const useApi = () => {
   const fetchApi = async (endpoint, options = {}) => {
@@ -15,4 +15,3 @@ export const useApi = () => {
 
   return { fetchApi };
 };
-
