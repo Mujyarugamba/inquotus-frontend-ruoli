@@ -1,0 +1,34 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+
+/**
+ * Salva una notifica personalizzata su Supabase.
+ * @param {Object} options
+ * @param {string} options.email_utente - Email destinatario
+ * @param {string} options.tipo - Tipo evento (INSERT, UPDATE, DELETE, ecc.)
+ * @param {string} options.descrizione - Messaggio della notifica
+ */
+export async function salvaNotifica({ email_utente, tipo, descrizione }) {
+  if (!email_utente || !tipo || !descrizione) {
+    console.warn('salvaNotifica: parametri incompleti');
+    return;
+  }
+
+  const { error } = await supabase.from('notifiche').insert([
+    {
+      email_utente,
+      tipo,
+      descrizione,
+      letto: false,
+      timestamp: new Date().toISOString()
+    }
+  ]);
+
+  if (error) {
+    console.error('Errore nel salvataggio della notifica:', error.message);
+  }
+}

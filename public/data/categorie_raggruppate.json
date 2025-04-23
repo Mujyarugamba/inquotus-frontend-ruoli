@@ -1,0 +1,60 @@
+[
+  {
+    "gruppo": "Lavori speciali / Edili",
+    "categorie": [
+      "Rimozione neve da tetti",
+      "Messa in sicurezza cornicioni o elementi pericolanti",
+      "Riparazione coperture e tetti",
+      "Rifacimento intonaci o pittura facciate",
+      "Interventi su canne fumarie",
+      "Montaggio pannelli solari termici"
+    ]
+  },
+  {
+    "gruppo": "Manutenzione e Pulizia",
+    "categorie": [
+      "Pulizia tetti",
+      "Pulizia grondaie",
+      "Pulizia vetri/vetrate in quota",
+      "Pulizia pannelli fotovoltaici",
+      "Pulizia facciate",
+      "Pulizia silos e ciminiere"
+    ]
+  },
+  {
+    "gruppo": "Ispezioni e Controlli",
+    "categorie": [
+      "Ispezione facciate",
+      "Ispezione coperture industriali",
+      "Ispezione pale eoliche",
+      "Ispezione torri e antenne",
+      "Ispezione con droni"
+    ]
+  },
+  {
+    "gruppo": "Installazioni",
+    "categorie": [
+      "Installazione antenne TV o parabole",
+      "Installazione impianti fotovoltaici",
+      "Installazione climatizzatori in quota",
+      "Installazione insegne e cartellonistica",
+      "Installazione linea vita",
+      "Installazione parafulmini",
+      "Montaggio ponteggi mobili temporanei"
+    ]
+  },
+  {
+    "gruppo": "Taglio e Verde",
+    "categorie": [
+      "Potatura alberi ad alto fusto",
+      "Abbattimento controllato alberi",
+      "Potatura siepi in quota"
+    ]
+  },
+  {
+    "gruppo": "Altro",
+    "categorie": [
+      "Altro (specifica…)"
+    ]
+  }
+]
