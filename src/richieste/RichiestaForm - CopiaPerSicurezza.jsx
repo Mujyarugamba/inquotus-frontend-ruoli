@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 
 const RichiestaForm = () => {
   const [categorieRaggruppate, setCategorieRaggruppate] = useState([]);

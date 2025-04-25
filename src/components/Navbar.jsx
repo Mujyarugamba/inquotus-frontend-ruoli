@@ -66,7 +66,9 @@ const Navbar = () => {
 
         {utente && (
           <>
-            <Link to="/home">📂 AreaLavoro</Link>{' | '}
+            {isCommittente && <Link to="/home">📂 AreaLavoro</Link>}
+            {(isImpresa || isProfessionista) && <Link to={`/${utente.ruolo}`}>📂 AreaLavoro</Link>}
+            {' | '}
             {(isImpresa || isProfessionista) && (
               <>
                 <Link to="/sblocchi-effettuati">🔓 Sblocchi effettuati</Link>{' | '}
@@ -109,7 +111,7 @@ const Navbar = () => {
           <>
             {' | '}
             <Link to="/magic-link">✨ Magic Link Login</Link>{' | '}
-            <Link to="/register">📝 Registrati</Link>
+            <Link to="/register/committente">📝 Registrati</Link>
           </>
         )}
       </div>
@@ -126,7 +128,6 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
 
 
 

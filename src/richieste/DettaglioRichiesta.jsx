@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 import { createClient } from '@supabase/supabase-js';
 import SalvaButton from '../components/SalvaButton'; // ✅ Importa il bottone
 

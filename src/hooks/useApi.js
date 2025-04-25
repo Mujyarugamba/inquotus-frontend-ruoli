@@ -1,17 +1,40 @@
-import { API_BASE } from '../config/config.js'; // ← estensione .js necessaria su Vercel
+// src/hooks/useApi.js
 
-export const useApi = () => {
-  const fetchApi = async (endpoint, options = {}) => {
-    try {
-      const res = await fetch(`${API_BASE}${endpoint}`, options);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Errore di rete');
-      return data;
-    } catch (err) {
-      console.error('Errore API:', err.message);
-      throw err;
+import { API_BASE } from '../config';
+
+/**
+ * Funzione fetch generica per tutte le API.
+ * Include log automatici, gestione token e gestione errori standardizzata.
+ */
+export async function fetchApi(endpoint, options = {}) {
+  const url = `${API_BASE}${endpoint}`;
+  console.log(`📡 Fetching: ${url}`);
+
+  const token = localStorage.getItem('token'); // 🔐 Legge il token se presente
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }), // 🔐 Include token se esiste
+        ...(options.headers || {})
+      },
+      ...options
+    });
+
+    // Controllo errori HTTP
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      console.error('❌ API Error:', errorData);
+      throw new Error(errorData.message || 'Errore nella risposta API');
     }
-  };
 
-  return { fetchApi };
-};
+    // Ritorno dati parsati
+    const data = await response.json();
+    console.log('✅ API Success:', data);
+    return data;
+  } catch (error) {
+    console.error('🚨 Errore API:', error.message);
+    throw error;
+  }
+}

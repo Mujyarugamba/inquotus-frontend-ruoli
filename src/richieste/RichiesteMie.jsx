@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 import { supabase } from '../config/supabaseClient'; // ✅
 import { toast } from 'react-toastify';
 

@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
+import { useNavigate, useParams } from 'react-router-dom';
+import { fetchApi } from '../hooks/useApi';
 
 const Register = () => {
+  const { ruolo } = useParams();
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     nome: '',
     email: '',
     password: '',
-    ruolo: 'committente'
+    ruolo: ruolo || 'committente'
   });
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  const { fetchApi } = useApi();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

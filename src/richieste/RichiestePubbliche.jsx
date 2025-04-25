@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 
 const RichiesteLavoroInQuota = () => {
   const [richieste, setRichieste] = useState([]);

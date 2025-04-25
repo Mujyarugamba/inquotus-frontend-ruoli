@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 
 const SbloccaContattiButton = ({ richiestaId }) => {
   const [caricamento, setCaricamento] = useState(false);

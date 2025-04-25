@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
+import { fetchApi } from '../hooks/useApi'; // ✅ usa fetchApi, non useApi
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const { fetchApi } = useApi();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,9 +31,23 @@ const Login = () => {
     <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
       <h2>Accedi</h2>
       <form onSubmit={handleSubmit}>
-        <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
         <br /><br />
-        <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
         <br /><br />
         <button type="submit">Accedi</button>
       </form>
@@ -44,6 +57,7 @@ const Login = () => {
 };
 
 export default Login;
+
 
 
 

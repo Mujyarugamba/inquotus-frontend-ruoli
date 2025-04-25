@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_BASE } from '../config/config';
+import { API_BASE } from '../config';
 import { AuthContext } from '../context/AuthContext';
 import useUploadImmagine from '../hooks/useUploadImmagine';
 

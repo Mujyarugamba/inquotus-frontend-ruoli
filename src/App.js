@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
 import Login from './auth/Login';
 import Register from './auth/Register';
@@ -32,10 +32,12 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import StoricoNotifiche from './notifiche/StoricoNotifiche';
 import useRealtimeNotifiche from './hooks/useRealtimeNotifiche';
-import Landing from './pages/Landing'; // nuovo import
+import Landing from './pages/Landing';
 
-function App() {
+function AppContent() {
   const [utente, setUtente] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,63 +45,81 @@ function App() {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUtente(payload);
+        // 🔁 Redirect reale in base al ruolo
+        if (payload.ruolo === 'committente') navigate('/home');
+        else if (payload.ruolo === 'impresa') navigate('/impresa');
+        else if (payload.ruolo === 'professionista') navigate('/professionista');
       } catch (err) {
         console.error('Errore parsing token:', err);
       }
     }
-  }, []);
+    setLoading(false);
+  }, [navigate]);
 
   useRealtimeNotifiche(utente?.email);
 
+  if (loading) return <div style={{ textAlign: 'center', marginTop: '4rem' }}>🔄 Verifica autenticazione...</div>;
+
   return (
-    <Router>
+    <>
       <Navbar />
-      <h1 style={{ textAlign: 'center', color: 'green', margin: '20px 0' }}>
-        Versione aggiornata - Aprile 2025
-      </h1>
       <div style={{ minHeight: '80vh' }}>
         <Routes>
-          {/* Landing page */}
-          <Route path="/" element={<Landing />} />
+          <Route
+            path="/"
+            element={
+              utente ? (
+                utente.ruolo === 'committente' ? (
+                  <Committente />
+                ) : utente.ruolo === 'impresa' ? (
+                  <Impresa />
+                ) : (
+                  <Professionista />
+                )
+              ) : (
+                <Landing />
+              )
+            }
+          />
 
-          {/* Pubbliche */}
           <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-          <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+          <Route path="/register/:ruolo" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
           <Route path="/magic-link" element={<PublicOnlyRoute><MagicLinkLogin /></PublicOnlyRoute>} />
           <Route path="/reset-password" element={<ResetPasswordSupabase />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Private - ruolo */}
           <Route path="/home" element={<PrivateRoute><Committente /></PrivateRoute>} />
           <Route path="/impresa" element={<PrivateRoute><Impresa /></PrivateRoute>} />
           <Route path="/professionista" element={<PrivateRoute><Professionista /></PrivateRoute>} />
 
-          {/* Richieste */}
           <Route path="/richiesta/:id" element={<PrivateRoute><DettaglioRichiesta /></PrivateRoute>} />
           <Route path="/nuova-richiesta" element={<PrivateRoute><RichiestaForm /></PrivateRoute>} />
           <Route path="/modifica-richiesta/:id" element={<PrivateRoute><RichiestaModifica /></PrivateRoute>} />
           <Route path="/mie-richieste" element={<PrivateRoute><RichiesteMie /></PrivateRoute>} />
 
-          {/* Pubbliche */}
           <Route path="/richieste-lavoro-in-quota" element={<RichiesteLavoroInQuota />} />
-
-          {/* Pagamenti & Sblocchi */}
           <Route path="/sblocchi-effettuati" element={<PrivateRoute><SblocchiEffettuati /></PrivateRoute>} />
           <Route path="/sblocco-successo" element={<PrivateRoute><SbloccoSuccesso /></PrivateRoute>} />
           <Route path="/sblocco-annullato" element={<PrivateRoute><SbloccoAnnullato /></PrivateRoute>} />
 
-          {/* Admin */}
           <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
           <Route path="/admin/pagamenti" element={<PrivateRoute><AdminPagamenti /></PrivateRoute>} />
           <Route path="/admin/richieste-sospette" element={<PrivateRoute><RichiesteSospette /></PrivateRoute>} />
           <Route path="/admin/notifiche" element={<PrivateRoute><AdminNotifiche /></PrivateRoute>} />
 
-          {/* Storico notifiche */}
           <Route path="/storico-notifiche" element={<PrivateRoute><StoricoNotifiche /></PrivateRoute>} />
         </Routes>
       </div>
       <Footer />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
