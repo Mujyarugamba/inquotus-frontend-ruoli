@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth'; // Assicurati che il percorso sia corretto
+import useAuth from '../hooks/useAuth'; // Corretto percorso di importazione
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
+  
+  const { login, error } = useAuth(); // Utilizza la funzione di login
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,20 +20,7 @@ const Login = () => {
       setMessage('✅ Accesso riuscito!');
       setTimeout(() => navigate('/home'), 1000);
     } catch (err) {
-      setMessage(err.message || 'Errore durante il login');
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!form.email) {
-      setMessage('⚠️ Inserisci prima l\'email.');
-      return;
-    }
-    try {
-      await resetPassword(form.email);
-      setMessage('✅ Email inviata per il reset della password.');
-    } catch (err) {
-      setMessage(err.message || 'Errore durante il reset della password');
+      setMessage(error || 'Errore durante il login');
     }
   };
 
@@ -51,7 +38,7 @@ const Login = () => {
         />
         <br /><br />
         <input
-          type={showPassword ? 'text' : 'password'}
+          type="password"
           name="password"
           placeholder="Password"
           value={form.password}
@@ -62,7 +49,6 @@ const Login = () => {
         <button type="submit">Accedi</button>
       </form>
       <p>{message}</p>
-      <button onClick={handleResetPassword}>Reset Password</button>
     </div>
   );
 };

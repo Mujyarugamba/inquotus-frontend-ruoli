@@ -1,3 +1,5 @@
+// src/hooks/useAuth.js
+
 import { useState } from 'react';
 import { supabase } from '../config/supabaseClient'; // Assicurati che il percorso sia corretto
 
@@ -6,15 +8,11 @@ const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Funzione per gestire il login
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
     try {
-      const { user, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { user, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       setUser(user);
     } catch (err) {
@@ -24,7 +22,6 @@ const useAuth = () => {
     }
   };
 
-  // Funzione per gestire il logout
   const logout = async () => {
     setLoading(true);
     setError(null);
@@ -38,13 +35,11 @@ const useAuth = () => {
     }
   };
 
-  // Funzione per il reset della password
   const resetPassword = async (email) => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.auth.api
-        .resetPasswordForEmail(email);
+      const { data, error } = await supabase.auth.api.resetPasswordForEmail(email);
       if (error) throw error;
       return data;
     } catch (err) {
@@ -54,22 +49,13 @@ const useAuth = () => {
     }
   };
 
-  // Funzione per ottenere i dettagli dell'utente
   const getUser = async () => {
     const currentUser = supabase.auth.user();
     setUser(currentUser);
     return currentUser;
   };
 
-  return {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    resetPassword, // Esportiamo la funzione di reset della password
-    getUser,
-  };
+  return { user, loading, error, login, logout, resetPassword, getUser };
 };
 
 export default useAuth;
