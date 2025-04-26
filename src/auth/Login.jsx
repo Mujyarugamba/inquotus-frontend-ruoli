@@ -1,57 +1,42 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fetchApi } from '../hooks/useApi'; // ✅ usa fetchApi, non useApi
+import { useAuth } from '../hooks/useAuth';  // Importa il nostro hook personalizzato
 
 const Login = () => {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login, error, loading } = useAuth();  // Usa il hook per login
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const data = await fetchApi('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      localStorage.setItem('token', data.token);
-      setMessage('✅ Accesso riuscito!');
-      setTimeout(() => navigate('/home'), 1000);
+      await login(email, password);
     } catch (err) {
-      setMessage(err.message || 'Errore durante il login');
+      setMessage(error || 'Errore durante il login');
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
+    <div>
       <h2>Accedi</h2>
       <form onSubmit={handleSubmit}>
         <input
           type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          placeholder="Email"
         />
-        <br /><br />
         <input
           type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
+          placeholder="Password"
         />
-        <br /><br />
-        <button type="submit">Accedi</button>
+        <button type="submit" disabled={loading}>Accedi</button>
       </form>
-      <p>{message}</p>
+      {message && <p>{message}</p>}
     </div>
   );
 };

@@ -1,89 +1,45 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { fetchApi } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';  // Importa il nostro hook personalizzato
 
 const Register = () => {
-  const { ruolo } = useParams();
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    nome: '',
-    email: '',
-    password: '',
-    ruolo: ruolo || 'committente'
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { register, error, loading } = useAuth();  // Usa il hook per registrazione
   const [message, setMessage] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&]).{6,}$/;
-
-    if (!regex.test(form.password)) {
-      setMessage('⚠️ La password deve contenere almeno 6 caratteri, una maiuscola, una minuscola, un numero e un simbolo');
-      return;
-    }
-
     try {
-      await fetchApi('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      setMessage('✅ Registrazione completata!');
-      setTimeout(() => navigate('/login'), 2000);
+      await register(email, password);
     } catch (err) {
-      setMessage(err.message || 'Errore durante la registrazione');
+      setMessage(error || 'Errore durante la registrazione');
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
+    <div>
       <h2>Registrati</h2>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="nome" placeholder="Nome completo" value={form.nome} onChange={handleChange} required />
-        <br /><br />
-        <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-        <br /><br />
-        <div style={{ position: 'relative' }}>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            style={{ paddingRight: '2.5rem' }}
-          />
-          <span
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: 'absolute',
-              right: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              cursor: 'pointer'
-            }}
-          >
-            {showPassword ? '🙈' : '👁️'}
-          </span>
-        </div>
-        <br />
-        <select name="ruolo" value={form.ruolo} onChange={handleChange} required>
-          <option value="committente">Committente</option>
-          <option value="impresa">Impresa</option>
-          <option value="professionista">Professionista</option>
-        </select>
-        <br /><br />
-        <button type="submit">Registrati</button>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="Email"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          placeholder="Password"
+        />
+        <button type="submit" disabled={loading}>Registrati</button>
       </form>
-      <p>{message}</p>
+      {message && <p>{message}</p>}
     </div>
   );
 };
 
 export default Register;
+
