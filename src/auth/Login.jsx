@@ -1,47 +1,74 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';  // Importa il nostro hook personalizzato
+import { useNavigate } from 'react-router-dom';
+import useAuth from '../hooks/useAuth'; // Assicurati che il percorso sia corretto
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, error, loading } = useAuth();  // Usa il hook per login
+  const [form, setForm] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, resetPassword } = useAuth();
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login(form.email, form.password);
+      setMessage('✅ Accesso riuscito!');
+      setTimeout(() => navigate('/home'), 1000);
     } catch (err) {
-      setMessage(error || 'Errore durante il login');
+      setMessage(err.message || 'Errore durante il login');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!form.email) {
+      setMessage('⚠️ Inserisci prima l\'email.');
+      return;
+    }
+    try {
+      await resetPassword(form.email);
+      setMessage('✅ Email inviata per il reset della password.');
+    } catch (err) {
+      setMessage(err.message || 'Errore durante il reset della password');
     }
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
       <h2>Accedi</h2>
       <form onSubmit={handleSubmit}>
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          name="email"
           placeholder="Email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={form.email}
+          onChange={handleChange}
           required
-          placeholder="Password"
         />
-        <button type="submit" disabled={loading}>Accedi</button>
+        <br /><br />
+        <input
+          type={showPassword ? 'text' : 'password'}
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <br /><br />
+        <button type="submit">Accedi</button>
       </form>
-      {message && <p>{message}</p>}
+      <p>{message}</p>
+      <button onClick={handleResetPassword}>Reset Password</button>
     </div>
   );
 };
 
 export default Login;
+
 
 
 
