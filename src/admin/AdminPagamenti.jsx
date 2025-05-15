@@ -8,7 +8,7 @@ import {
   TableCell
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { format, startOfDay, getWeek, getYear } from 'date-fns';
 import Papa from 'papaparse';
