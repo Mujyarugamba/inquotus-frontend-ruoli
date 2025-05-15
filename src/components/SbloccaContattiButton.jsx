@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { API_BASE } from '../config';
+import { toast } from 'react-hot-toast'; // ✅ Importato toast
 
 const SbloccaContattiButton = ({ richiestaId }) => {
   const [caricamento, setCaricamento] = useState(false);
@@ -19,11 +20,11 @@ const SbloccaContattiButton = ({ richiestaId }) => {
       if (res.ok && data.sessionUrl) {
         window.location.href = data.sessionUrl; // reindirizza a Stripe Checkout
       } else {
-        alert(data.error || 'Errore durante la creazione della sessione di pagamento');
+        toast.error(data.error || '❌ Errore durante la creazione della sessione di pagamento.');
       }
     } catch (err) {
       console.error(err);
-      alert('Errore di rete durante la creazione della sessione Stripe');
+      toast.error('❌ Errore di rete durante la creazione della sessione Stripe.');
     } finally {
       setCaricamento(false);
     }
@@ -31,9 +32,10 @@ const SbloccaContattiButton = ({ richiestaId }) => {
 
   return (
     <button onClick={handleClick} disabled={caricamento}>
-      {caricamento ? 'Caricamento...' : '🔓 Sblocca contatti'}
+      {caricamento ? '⏳ Caricamento...' : '🔓 Sblocca contatti'}
     </button>
   );
 };
 
 export default SbloccaContattiButton;
+

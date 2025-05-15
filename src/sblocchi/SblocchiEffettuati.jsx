@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { toast } from 'react-hot-toast';
+import { ClipLoader } from 'react-spinners';
+import { logoutAutomatico } from '../hooks/useAuth'; // 👈 IMPORT logoutAutomatico
 
 const SblocchiEffettuati = () => {
   const [sblocchi, setSblocchi] = useState([]);
@@ -11,14 +14,18 @@ const SblocchiEffettuati = () => {
       try {
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_BASE}/api/sblocchi-effettuati`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
+        if (res.status === 401) {
+          logoutAutomatico();
+          return;
+        }
         const data = await res.json();
         setSblocchi(data);
+        toast.success('✅ Sblocchi caricati con successo!');
       } catch (err) {
         console.error("Errore nel caricamento degli sblocchi:", err);
+        toast.error('❌ Errore durante il caricamento degli sblocchi.');
       } finally {
         setLoading(false);
       }
@@ -33,7 +40,9 @@ const SblocchiEffettuati = () => {
       <p>Visualizza tutte le richieste di lavoro in quota che hai già sbloccato.</p>
 
       {loading ? (
-        <p>⏳ Caricamento sblocchi...</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+          <ClipLoader color="#667eea" size={50} />
+        </div>
       ) : sblocchi.length === 0 ? (
         <p>Nessuno sblocco effettuato finora.</p>
       ) : (

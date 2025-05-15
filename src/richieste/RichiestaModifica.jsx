@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
+import { toast } from 'react-hot-toast';
+import { ClipLoader } from 'react-spinners';
+import { logoutAutomatico } from '../hooks/logoutAutomatico'; // 👈 IMPORT logoutAutomatico
 
 const RichiestaModifica = () => {
   const { id } = useParams();
@@ -10,31 +13,37 @@ const RichiestaModifica = () => {
   const [province, setProvince] = useState([]);
   const [comuni, setComuni] = useState([]);
   const [messaggio, setMessaggio] = useState('');
+  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
 
-  // Carica dati iniziali
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/richiesta/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (res.status === 401) {
+          logoutAutomatico();
+          return;
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Errore');
         setRichiesta(data);
       } catch (err) {
         setMessaggio('❌ Errore caricamento richiesta');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
+
     fetch('/data/province-per-regione.json')
       .then(res => res.json())
       .then(setRegioni)
       .catch(() => setMessaggio('❌ Errore caricamento regioni'));
   }, [id, token]);
 
-  // Carica province in base alla regione
   useEffect(() => {
     if (richiesta?.regione) {
       const selected = regioni.find(r => r.nome === richiesta.regione);
@@ -42,7 +51,6 @@ const RichiestaModifica = () => {
     }
   }, [richiesta?.regione, regioni]);
 
-  // Carica comuni
   useEffect(() => {
     if (richiesta?.provincia) {
       fetch(`/data/comuni/${richiesta.provincia}.json`)
@@ -63,6 +71,7 @@ const RichiestaModifica = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/richiesta/${id}`, {
         method: 'PUT',
@@ -72,19 +81,33 @@ const RichiestaModifica = () => {
         },
         body: JSON.stringify(richiesta)
       });
+      if (res.status === 401) {
+        logoutAutomatico();
+        return;
+      }
       const data = await res.json();
       if (res.ok) {
-        setMessaggio('✅ Richiesta aggiornata con successo');
-        setTimeout(() => navigate('/mie-richieste'), 1500);
+        toast.success('✅ Modifica salvata con successo!');
+        navigate('/mie-richieste');
       } else {
-        setMessaggio(`❌ ${data.error || 'Errore salvataggio'}`);
+        toast.error(`❌ ${data.error || 'Errore salvataggio'}`);
       }
     } catch {
-      setMessaggio('❌ Errore di rete');
+      toast.error('❌ Errore di rete');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!richiesta) return <p>⏳ Caricamento...</p>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem' }}>
+        <ClipLoader color="#667eea" size={50} />
+      </div>
+    );
+  }
+
+  if (!richiesta) return <p>❌ Richiesta non trovata.</p>;
 
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '2rem auto' }}>
@@ -129,10 +152,14 @@ const RichiestaModifica = () => {
 
       <br /><br />
       <button type="submit">💾 Salva modifiche</button>
-      {messaggio && <p style={{ marginTop: '1rem', color: messaggio.startsWith('✅') ? 'green' : 'red' }}>{messaggio}</p>}
+
+      {messaggio && (
+        <p style={{ marginTop: '1rem', color: messaggio.startsWith('✅') ? 'green' : 'red' }}>
+          {messaggio}
+        </p>
+      )}
     </form>
   );
 };
 
 export default RichiestaModifica;
-

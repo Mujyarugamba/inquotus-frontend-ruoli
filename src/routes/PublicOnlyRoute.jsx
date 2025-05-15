@@ -1,25 +1,18 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const PublicOnlyRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
+  const { utente } = useContext(AuthContext);
 
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      switch (payload.ruolo) {
-        case 'committente':
-          return <Navigate to="/home" />;
-        case 'impresa':
-          return <Navigate to="/impresa" />;
-        case 'professionista':
-          return <Navigate to="/professionista" />;
-        default:
-          return <Navigate to="/" />;
-      }
-    } catch (err) {
-      console.error("Token non valido:", err);
-      localStorage.removeItem('token');
+  if (utente) {
+    // Se sei già loggato, non puoi accedere a login o register: vai alla tua Home
+    if (utente.ruolo === 'committente') {
+      return <Navigate to="/home" replace />;
+    } else if (utente.ruolo === 'impresa') {
+      return <Navigate to="/impresa" replace />;
+    } else if (utente.ruolo === 'professionista') {
+      return <Navigate to="/professionista" replace />;
     }
   }
 

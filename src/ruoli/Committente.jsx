@@ -18,12 +18,6 @@ const Committente = () => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h2>👷 AreaLavoro – Committente</h2>
-
-      <p style={{ marginTop: '1rem' }}>
-        Qui puoi <strong>gestire e monitorare le tue richieste</strong> di lavoro in quota. Puoi anche crearne di nuove.
-      </p>
-
       {utente?.ruolo === 'committente' && (
         <div style={{ margin: '1.5rem 0' }}>
           <button

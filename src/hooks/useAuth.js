@@ -1,22 +1,76 @@
-// src/hooks/useAuth.js
+// --- useAuth.js aggiornato con messaggi centralizzati ---
 
-import { useState } from 'react';
-import { supabase } from '../config/supabaseClient'; // Assicurati che il percorso sia corretto
+import { useState, useContext } from 'react';
+import  supabase  from '../config/supabaseClient';
+import { AuthContext } from '../context/AuthContext';
+import messages from '../utils/messages'; // <-- Importato messaggi
 
 const useAuth = () => {
-  const [user, setUser] = useState(null);
+  const { setUtente } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const register = async (email, password, nome) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { nome }
+        }
+      });
+
+      if (error) throw error;
+
+      return true;
+    } catch (err) {
+      if (err.message.includes('429')) {
+        setError(messages.error.networkError); // Troppi tentativi → network error amichevole
+      } else if (err.message.includes('Invalid email')) {
+        setError(messages.error.registrationFailed); // Email non valida → messaggio di registrazione
+      } else {
+        setError(messages.error.registrationFailed); // Qualsiasi altro errore
+      }
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
     try {
-      const { user, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!email || !password) {
+        throw new Error(messages.error.loginFailed);
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      setUser(user);
+
+      const token = data.session?.access_token;
+      if (token) {
+        localStorage.setItem('token', token);
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUtente({
+          email: payload.email,
+          nome: payload.user_metadata?.nome || '',
+          ruolo: payload.app_metadata?.roles?.[0] || 'committente'
+        });
+        return true;
+      }
+      return false;
     } catch (err) {
-      setError(err.message || 'Errore durante il login');
+      if (err.message.includes('Invalid login credentials')) {
+        setError(messages.error.loginFailed); // Credenziali sbagliate
+      } else if (err.message.includes('Email not confirmed')) {
+        setError(messages.error.unauthorizedAccess); // Email non confermata
+      } else {
+        setError(messages.error.networkError); // Problema di accesso generico
+      }
+      return false;
     } finally {
       setLoading(false);
     }
@@ -27,35 +81,17 @@ const useAuth = () => {
     setError(null);
     try {
       await supabase.auth.signOut();
-      setUser(null);
+      localStorage.removeItem('token');
+      setUtente(null);
     } catch (err) {
-      setError(err.message || 'Errore durante il logout');
+      setError(messages.error.networkError); // errore durante logout
     } finally {
       setLoading(false);
     }
   };
 
-  const resetPassword = async (email) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error } = await supabase.auth.api.resetPasswordForEmail(email);
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      setError(err.message || 'Errore durante il reset della password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getUser = async () => {
-    const currentUser = supabase.auth.user();
-    setUser(currentUser);
-    return currentUser;
-  };
-
-  return { user, loading, error, login, logout, resetPassword, getUser };
+  return { register, login, logout, loading, error };
 };
 
 export default useAuth;
+

@@ -1,0 +1,66 @@
+/* RichiestaForm.css */
+
+.richiesta-form-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.richiesta-form-container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 24px;
+  color: #2d3748;
+  text-align: center;
+}
+
+.richiesta-form-container label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.richiesta-form-container input[type="text"],
+.richiesta-form-container input[type="file"],
+.richiesta-form-container select,
+.richiesta-form-container textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.richiesta-form-container textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.richiesta-form-container .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.richiesta-form-container button {
+  width: 100%;
+  background: linear-gradient(to right, #667eea, #764ba2);
+  border: none;
+  color: white;
+  font-size: 1rem;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.richiesta-form-container button:hover {
+  transform: scale(1.02);
+}

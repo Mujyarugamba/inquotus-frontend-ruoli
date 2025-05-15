@@ -1,7 +1,8 @@
 import { Star, StarOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { supabase } from '../config/supabaseClient';
+import supabase from '../config/supabaseClient';
+
 
 const SalvaButton = ({ richiestaId, userId }) => {
   const [salvata, setSalvata] = useState(false);

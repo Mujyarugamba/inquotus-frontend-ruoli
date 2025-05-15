@@ -1,28 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { salvaNotifica } from '../utils/salvaNotifica';
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+import React, { useEffect, useState, useContext } from 'react';
+import supabase from '../config/supabaseClient';
+import { AuthContext } from '../context/AuthContext';
 
 const StoricoNotifiche = ({ setNotificheCount }) => {
+  const { utente } = useContext(AuthContext);
+  const utenteEmail = utente?.email;
+
   const [notifiche, setNotifiche] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [utenteEmail, setUtenteEmail] = useState(null);
   const [filtroTipo, setFiltroTipo] = useState('tutte');
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      setUtenteEmail(payload.email);
-    } catch {
-      setUtenteEmail(null);
-    }
-  }, []);
 
   const fetchNotifiche = async () => {
     if (!utenteEmail) return;
@@ -129,7 +115,9 @@ const StoricoNotifiche = ({ setNotificheCount }) => {
               }}
             >
               <div style={{ fontWeight: 'bold', marginBottom: '0.3rem' }}>{n.tipo}</div>
-              <div style={{ fontSize: '0.9rem', color: '#555' }}>{n.descrizione || 'Nessuna descrizione disponibile.'}</div>
+              <div style={{ fontSize: '0.9rem', color: '#555' }}>
+                {n.descrizione || 'Nessuna descrizione disponibile.'}
+              </div>
               <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.5rem' }}>
                 {new Date(n.timestamp).toLocaleString()}
               </div>
@@ -142,4 +130,5 @@ const StoricoNotifiche = ({ setNotificheCount }) => {
 };
 
 export default StoricoNotifiche;
+
 

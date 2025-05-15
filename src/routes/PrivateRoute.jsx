@@ -1,41 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
-const PrivateRoute = ({ children, ruolo }) => {
-  const location = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [autorizzato, setAutorizzato] = useState(false);
+const PrivateRoute = ({ children }) => {
+  const { utente } = useContext(AuthContext);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      localStorage.setItem('redirectAfterLogin', location.pathname);
-      setAutorizzato(false);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-
-      if (ruolo && payload.ruolo !== ruolo) {
-        setAutorizzato(false);
-      } else {
-        setAutorizzato(true);
-      }
-    } catch (err) {
-      console.error('Errore parsing token:', err);
-      setAutorizzato(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [location.pathname, ruolo]);
-
-  if (loading) return <p style={{ padding: '2rem' }}>⏳ Verifica autenticazione...</p>;
-  if (!autorizzato) return <Navigate to="/login" />;
+  if (!utente) {
+    // Se non c'è un utente loggato, rimanda al login
+    return <Navigate to="/login" replace />;
+  }
 
   return children;
 };
 
 export default PrivateRoute;
+

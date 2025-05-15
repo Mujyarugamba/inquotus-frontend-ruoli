@@ -1,13 +1,12 @@
 // src/supabaseTest.js
 import React, { useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import supabase from '../config/supabaseClient';
 
 // Ottieni le variabili di ambiente
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 // Inizializza Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const SupabaseTest = () => {
 

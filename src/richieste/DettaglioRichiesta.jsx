@@ -1,117 +1,131 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
-import { createClient } from '@supabase/supabase-js';
-import SalvaButton from '../components/SalvaButton'; // ✅ Importa il bottone
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+import { toast } from 'react-toastify';
+import { Helmet } from 'react-helmet';
 
 const DettaglioRichiesta = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [richiesta, setRichiesta] = useState(null);
-  const [errore, setErrore] = useState('');
-  const [showSegnala, setShowSegnala] = useState(false);
-  const [motivoSegnalazione, setMotivoSegnalazione] = useState('');
-  const [segnalazioneInviata, setSegnalazioneInviata] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [caricamento, setCaricamento] = useState(true);
+  const [sbloccata, setSbloccata] = useState(false);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchRichiesta = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/richiesta/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
+        const res = await fetch(`${API_BASE}/api/richieste-lavoro-in-quota/${slug}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setRichiesta(data);
+      } catch {
+        toast.error("Richiesta non trovata");
+        navigate("/richieste");
+      } finally {
+        setCaricamento(false);
+      }
+    };
+    fetchRichiesta();
+  }, [slug, navigate]);
+
+  useEffect(() => {
+    const checkSblocco = async () => {
+      if (!token || !richiesta) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/sblocchi-effettuati`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Errore nel caricamento');
-        setRichiesta(data);
-      } catch (err) {
-        setErrore(err.message);
+        if (Array.isArray(data) && data.includes(richiesta.id)) {
+          setSbloccata(true);
+        }
+      } catch {
+        console.error('Errore controllo sblocco');
       }
     };
+    checkSblocco();
+  }, [token, richiesta]);
 
-    const getUserId = () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserId(payload.id);
+  const handleSbloccaContatti = async () => {
+    if (!token) {
+      toast.error("Devi accedere per sbloccare i contatti.");
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/checkout/sblocca`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ richiesta_id: richiesta.id })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Errore durante il pagamento");
       }
-    };
-
-    fetchRichiesta();
-    getUserId();
-  }, [id]);
-
-  const segnalaRichiesta = async () => {
-    if (!motivoSegnalazione.trim()) return alert("Inserisci un motivo valido");
-
-    const token = localStorage.getItem('token');
-    const payload = JSON.parse(atob(token.split('.')[1]));
-
-    const { error } = await supabase.from('segnalazioni').insert({
-      richiesta_id: richiesta.id,
-      email_committente: richiesta.email_committente,
-      email_segnalante: payload.email,
-      motivo: motivoSegnalazione,
-    });
-
-    if (!error) {
-      setSegnalazioneInviata(true);
-      setShowSegnala(false);
-    } else {
-      alert("Errore nell'invio segnalazione");
+    } catch {
+      toast.error("Errore nella richiesta di sblocco");
     }
   };
 
+  if (caricamento) return <div className="p-6">⏳ Caricamento...</div>;
+
+  if (!richiesta) return null;
+
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>📄 Dettaglio richiesta</h2>
+    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded">
+      <Helmet>
+        <title>{richiesta.titolo} – Inquotus</title>
+        <meta name="description" content={`Richiesta per ${richiesta.categoria} a ${richiesta.localita}`} />
+      </Helmet>
 
-      {errore && <p style={{ color: 'red' }}>{errore}</p>}
+      <h2 className="text-2xl font-bold mb-2">{richiesta.titolo}</h2>
+      <p className="text-gray-600 mb-1">📍 {richiesta.localita}</p>
+      <p className="text-gray-600 mb-1">🗂 {richiesta.categoria}</p>
+      {richiesta.urgente && (
+        <p className="inline-block bg-red-500 text-white text-xs px-2 py-1 rounded mb-2">🚨 Urgente</p>
+      )}
 
-      {richiesta ? (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p><strong>Categoria:</strong> {richiesta.categoria}</p>
-            {userId && <SalvaButton richiestaId={richiesta.id} userId={userId} />}
-          </div>
-          <p><strong>Località:</strong> {richiesta.localita}</p>
-          <p><strong>Descrizione:</strong> {richiesta.descrizione}</p>
-          <p><strong>Contatti:</strong> {richiesta.contatti}</p>
-          <p><strong>Data:</strong> {new Date(richiesta.data_inserimento).toLocaleString()}</p>
+      {richiesta.media_url && (
+        <div className="my-4">
+          <img src={richiesta.media_url} alt="Allegato" className="max-h-64 rounded shadow" />
+        </div>
+      )}
 
-          {!segnalazioneInviata && (
-            <>
-              <button onClick={() => setShowSegnala(true)}>🚩 Segnala richiesta</button>
+      <p className="text-gray-800 mb-4 whitespace-pre-wrap">{richiesta.descrizione || 'Nessuna descrizione.'}</p>
 
-              {showSegnala && (
-                <div style={{ marginTop: '1rem' }}>
-                  <textarea
-                    value={motivoSegnalazione}
-                    onChange={(e) => setMotivoSegnalazione(e.target.value)}
-                    placeholder="Motivo della segnalazione..."
-                    rows={3}
-                    style={{ width: '100%', marginBottom: '0.5rem' }}
-                  />
-                  <button onClick={segnalaRichiesta} style={{ backgroundColor: 'red', color: 'white' }}>
-                    Invia segnalazione
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {segnalazioneInviata && <p style={{ color: 'green' }}>✅ Richiesta segnalata agli amministratori.</p>}
+      {sbloccata ? (
+        <div className="p-4 border rounded bg-green-50">
+          <p className="text-sm text-gray-700 mb-1">📞 Contatti:</p>
+          <p className="text-lg font-semibold text-blue-700">{richiesta.contatti}</p>
         </div>
       ) : (
-        <p>Caricamento...</p>
+        <button
+          onClick={handleSbloccaContatti}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
+          🔓 Sblocca contatti
+        </button>
       )}
+
+      <div className="mt-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-sm text-gray-600 underline hover:text-blue-700"
+        >
+          ← Torna indietro
+        </button>
+      </div>
     </div>
   );
 };
 
 export default DettaglioRichiesta;
+
+
+

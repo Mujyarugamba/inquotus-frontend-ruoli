@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
-import { supabase } from '../config/supabaseClient'; // ✅
+import supabase from '../config/supabaseClient';
 import { toast } from 'react-toastify';
 
 const RichiesteMie = () => {
   const [richieste, setRichieste] = useState([]);
   const [messaggio, setMessaggio] = useState('');
-  const [utenteInfo, setUtenteInfo] = useState(null);
   const [caricamento, setCaricamento] = useState(false);
+  const [erroreRete, setErroreRete] = useState(false);
   const [notifiche, setNotifiche] = useState([]);
   const [mostraNotifiche, setMostraNotifiche] = useState(false);
+  const [utenteInfo, setUtenteInfo] = useState(null);
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
@@ -38,11 +39,16 @@ const RichiesteMie = () => {
         if (Array.isArray(data)) {
           setRichieste(data);
           setMessaggio('');
+          setErroreRete(false);
         } else {
           setMessaggio('❌ Errore nel caricamento delle richieste');
+          setErroreRete(true);
         }
       })
-      .catch(() => setMessaggio('❌ Errore di rete'))
+      .catch(() => {
+        setMessaggio('❌ Errore di rete');
+        setErroreRete(true);
+      })
       .finally(() => setCaricamento(false));
   };
 
@@ -181,18 +187,29 @@ const RichiesteMie = () => {
         )}
       </div>
 
-      {utenteInfo && (
-        <p><strong>👤 {utenteInfo.email}</strong> | Ruolo: <strong>{utenteInfo.ruolo}</strong></p>
-      )}
-
-      {messaggio && (
-        <p style={{ color: messaggio.startsWith('✅') ? 'green' : 'red' }}>{messaggio}</p>
-      )}
-
-      {caricamento ? (
+      {erroreRete ? (
+        <p style={{ color: 'red' }}>Errore di rete: riprova a ricaricare la pagina o controlla la connessione.</p>
+      ) : caricamento ? (
         <p>Caricamento richieste...</p>
       ) : richieste.length === 0 ? (
-        <p>Non hai ancora inserito richieste.</p>
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <p>Non hai ancora inserito richieste.</p>
+          <button
+            onClick={() => navigate('/nuova-richiesta')}
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              cursor: 'pointer'
+            }}
+          >
+            ➕ Richiedi preventivo per un lavoro in quota
+          </button>
+        </div>
       ) : (
         <ul>
           {richieste.map(r => (
@@ -215,3 +232,4 @@ const RichiesteMie = () => {
 };
 
 export default RichiesteMie;
+

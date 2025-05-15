@@ -1,133 +1,179 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { supabase } from '../config/supabaseClient';
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Navbar.css";
+
+const VALID_ROLES = ["committente", "impresa", "professionista"];
 
 const Navbar = () => {
+  const { utente, logout, initializing } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { utente, logout } = useContext(AuthContext);
-  const [notificheNonLette, setNotificheNonLette] = useState(0);
-
-  useEffect(() => {
-    if (!utente?.email) return;
-
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from('notifiche')
-        .select('*', { count: 'exact', head: true })
-        .eq('email_utente', utente.email)
-        .eq('letto', false);
-
-      setNotificheNonLette(count || 0);
-    };
-
-    fetchCount();
-
-    const channel = supabase
-      .channel('notifiche-navbar')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'notifiche',
-      }, (payload) => {
-        if (payload.new?.email_utente === utente?.email) {
-          fetchCount();
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [utente]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showRegisterDropdown, setShowRegisterDropdown] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/", { replace: true });
   };
 
-  const isImpresa = utente?.ruolo === 'impresa';
-  const isProfessionista = utente?.ruolo === 'professionista';
-  const isCommittente = utente?.ruolo === 'committente';
-  const isAdmin = utente?.ruolo === 'admin';
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setShowRegisterDropdown(false);
+  };
+
+  const isActive = (path) => location.pathname.startsWith(path);
+
+  if (initializing) {
+    return (
+      <nav className="navbar">
+        <div className="navbar-logo">🧗 Inquotus</div>
+        <div>⏳ Caricamento...</div>
+      </nav>
+    );
+  }
 
   return (
-    <nav style={{
-      padding: '1rem',
-      background: '#f2f2f2',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <div>
-        <Link to="/">🏠 Home</Link>{' | '}
-        <Link to="/richieste-lavoro-in-quota">🔍 Richieste di lavoro in quota</Link>{' | '}
-
-        {utente && (
-          <>
-            {isCommittente && <Link to="/home">📂 AreaLavoro</Link>}
-            {(isImpresa || isProfessionista) && <Link to={`/${utente.ruolo}`}>📂 AreaLavoro</Link>}
-            {' | '}
-            {(isImpresa || isProfessionista) && (
-              <>
-                <Link to="/sblocchi-effettuati">🔓 Sblocchi effettuati</Link>{' | '}
-                <Link to="/richieste-salvate">⭐ Richieste salvate</Link>{' | '}
-              </>
-            )}
-            <Link to="/storico-notifiche" style={{ position: 'relative' }}>
-              📜 Storico notifiche
-              {notificheNonLette > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-5px',
-                  right: '-10px',
-                  background: 'red',
-                  color: 'white',
-                  borderRadius: '50%',
-                  padding: '2px 6px',
-                  fontSize: '0.7rem',
-                  fontWeight: 'bold'
-                }}>
-                  {notificheNonLette}
-                </span>
-              )}
+    <>
+      <nav className="navbar">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="navbar-logo">🧗 Inquotus</Link>
+          <div className="navbar-links">
+            <Link
+              to="/richieste"
+              className={isActive("/richieste") ? "underline" : ""}
+              onClick={closeMenu}
+            >
+              🔍 Richieste
             </Link>
-            {' | '}
-            {isCommittente && (
-              <Link to="/analytics-richieste">📊 Analytics</Link>
-            )}
-            {isAdmin && (
-              <>
-                {' | '}
-                <Link to="/admin/dashboard">🛠️ Admin Dashboard</Link>{' | '}
-                <Link to="/admin/pagamenti">💳 Pagamenti</Link>
-              </>
-            )}
-          </>
-        )}
+            <Link
+              to="/formazione"
+              className={isActive("/formazione") ? "underline" : ""}
+              onClick={closeMenu}
+            >
+              🎓 Formazione
+            </Link>
+            <Link
+              to="/accesso-rapido"
+              className={isActive("/accesso-rapido") ? "underline" : ""}
+              onClick={closeMenu}
+            >
+              ✨ Accesso rapido
+            </Link>
+          </div>
+        </div>
 
-        {!utente && (
-          <>
-            {' | '}
-            <Link to="/magic-link">✨ Magic Link Login</Link>{' | '}
-            <Link to="/register/committente">📝 Registrati</Link>
-          </>
-        )}
-      </div>
+        <div className="flex items-end gap-4">
+          <button
+            className="mobile-toggle"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            ☰
+          </button>
 
-      {utente && (
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontWeight: 'bold' }}>🔐 Area riservata</div>
-          <div>👋 Benvenuto, {utente.nome || utente.email} ({utente.ruolo})</div>
-          <button onClick={handleLogout} style={{ marginTop: '0.3rem', color: 'red' }}>🔓 Logout</button>
+          {utente ? (
+            <div className="navbar-user flex items-center gap-4">
+              <span className="saluto">
+                Benvenuto nella tua area di lavoro,{" "}
+                <strong>
+                  {utente.nome || utente.email} ({VALID_ROLES.includes(utente.ruolo) ? utente.ruolo : "ruolo sconosciuto"})
+                </strong>
+              </span>
+              <button
+                onClick={handleLogout}
+                className="logout-button"
+                aria-label="Logout"
+              >
+                🔒 Logout
+              </button>
+            </div>
+          ) : (
+            <div className="navbar-user relative">
+              <button
+                onClick={() => setShowRegisterDropdown(!showRegisterDropdown)}
+                className="underline text-sm mr-2"
+              >
+                📝 Registrati
+              </button>
+              {showRegisterDropdown && (
+                <div className="dropdown-menu" onMouseLeave={() => setShowRegisterDropdown(false)}>
+                  <Link to="/register?role=committente" onClick={closeMenu}>👤 Committente</Link>
+                  <Link to="/register?role=impresa" onClick={closeMenu}>🏢 Impresa</Link>
+                  <Link to="/register?role=professionista" onClick={closeMenu}>🧰 Professionista</Link>
+                </div>
+              )}
+              <Link
+                to="/login"
+                className="underline text-sm"
+                onClick={closeMenu}
+              >
+                🔐 Accedi
+              </Link>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {menuOpen && (
+        <div className="mobile-menu open">
+          <Link to="/richieste" onClick={closeMenu}>🔍 Richieste</Link>
+          <Link to="/formazione" onClick={closeMenu}>🎓 Formazione</Link>
+          <Link to="/accesso-rapido" onClick={closeMenu}>✨ Accesso rapido</Link>
+          {!utente && (
+            <>
+              <Link to="/register?role=committente" onClick={closeMenu}>📝 Committente</Link>
+              <Link to="/register?role=impresa" onClick={closeMenu}>📝 Impresa</Link>
+              <Link to="/register?role=professionista" onClick={closeMenu}>📝 Professionista</Link>
+              <Link to="/login" onClick={closeMenu}>🔐 Accedi</Link>
+            </>
+          )}
+          {utente && (
+            <>
+              <span>
+                👋 {utente.nome || "Utente"}{" "}
+                <span className={`badge badge-${utente.ruolo}`}>
+                  {utente.ruolo}
+                </span>
+              </span>
+              <button
+                onClick={handleLogout}
+                className="logout-button"
+                aria-label="Logout"
+              >
+                🔒 Logout
+              </button>
+            </>
+          )}
         </div>
       )}
-    </nav>
+    </>
   );
 };
 
 export default Navbar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

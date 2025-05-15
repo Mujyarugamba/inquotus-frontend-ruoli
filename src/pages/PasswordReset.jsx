@@ -1,43 +1,128 @@
 import React, { useState } from 'react';
-import { API_BASE } from '../config';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import supabase from '../config/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 const PasswordReset = () => {
   const [email, setEmail] = useState('');
-  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
-    setMsg('');
+    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/password-reset`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://www.inquotus.it/reset-password',
       });
-      const data = await res.json();
-      setMsg(data.message || data.error);
+
+      if (error) {
+        toast.error('❌ Errore: ' + error.message);
+      } else {
+        toast.success('📩 Controlla la tua email per resettare la password!');
+        setTimeout(() => {
+          setFadeOut(true);
+          setTimeout(() => navigate('/login'), 1000);
+        }, 1500);
+      }
     } catch (err) {
-      setMsg('Errore di connessione al server');
+      toast.error('❌ Errore durante il reset della password');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
-      <h2>Recupera password</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Inserisci la tua email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', marginBottom: '1rem' }}
-        />
-        <button type="submit">Invia email di recupero</button>
-      </form>
-      {msg && <p style={{ marginTop: '1rem' }}>{msg}</p>}
-    </div>
+    <AnimatePresence>
+      {!fadeOut && (
+        <motion.div initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={containerStyle}>
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={cardStyle}
+          >
+            <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Reset Password</h2>
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                type="email"
+                placeholder="La tua email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                style={inputStyle}
+              />
+              <motion.button
+                type="submit"
+                disabled={loading}
+                style={buttonStyle}
+                whileHover={!loading ? { scale: 1.05 } : {}}
+                animate={loading ? { width: 70 } : { width: '100%' }}
+                transition={{ duration: 0.3 }}
+              >
+                {loading ? (
+                  <motion.div
+                    style={{ height: 4, width: '100%', backgroundColor: '#ffffff', borderRadius: 2 }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }}
+                  />
+                ) : (
+                  '📩 Invia email di reset'
+                )}
+              </motion.button>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
+};
+
+const containerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  padding: '2rem',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+};
+
+const cardStyle = {
+  backgroundColor: 'rgba(255,255,255,0.8)',
+  padding: '2rem',
+  borderRadius: '1rem',
+  boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+  width: '100%',
+  maxWidth: '400px'
+};
+
+const inputStyle = {
+  padding: '0.8rem 1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #ccc',
+  fontSize: '1rem',
+  width: '100%'
+};
+
+const buttonStyle = {
+  padding: '0.8rem 1rem',
+  backgroundColor: '#667eea',
+  color: 'white',
+  fontWeight: 'bold',
+  fontSize: '1rem',
+  border: 'none',
+  borderRadius: '0.5rem',
+  cursor: 'pointer',
+  overflow: 'hidden',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
 };
 
 export default PasswordReset;

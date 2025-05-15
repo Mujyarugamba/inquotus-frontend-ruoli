@@ -13,7 +13,8 @@ const useRichiesteLavoroInQuota = (token, sblocchiEffettuati) => {
 
         const richiesteTaggate = data.map(r => ({
           ...r,
-          sbloccata: sblocchiEffettuati.includes(r.id) ? 'si' : 'no'
+          sbloccata: sblocchiEffettuati.includes(r.id) ? 'si' : 'no',
+          slug: r.slug // ✅ aggiunto in modo sicuro
         }));
 
         setRichieste(richiesteTaggate);
@@ -31,6 +32,7 @@ const useRichiesteLavoroInQuota = (token, sblocchiEffettuati) => {
 };
 
 export default useRichiesteLavoroInQuota;
+
 
 
 

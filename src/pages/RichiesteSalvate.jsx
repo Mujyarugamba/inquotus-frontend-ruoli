@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+import supabase from '../config/supabaseClient';
 
 const RichiesteSalvate = () => {
   const [richieste, setRichieste] = useState([]);
